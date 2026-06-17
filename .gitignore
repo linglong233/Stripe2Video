@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+out/
+build/
+
+# Vite / electron-vite cache
+.vite/
+
+# Temporary frame export dirs (encoder scratch)
+tmp/
+.temp-frames/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.idea/
+*.suo
+*.user
+*.sln.docstates
+
+# Keep VSCode settings out by default (uncomment if you want to share)
+# .vscode/
