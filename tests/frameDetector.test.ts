@@ -33,3 +33,23 @@ describe('isEvenlyDivisible', () => {
     expect(isEvenlyDivisible(2050, 8)).toBe(false)
   })
 })
+
+describe('detectGrid (grid via allowGrid)', () => {
+  it('detects multiple rows for a tall sheet', () => {
+    expect(detectGrid(256, 1024, { allowGrid: true })).toEqual({
+      cols: 1, rows: 4, frameW: 256, frameH: 256
+    })
+  })
+
+  it('keeps a horizontal strip as a single row even with allowGrid', () => {
+    expect(detectGrid(2048, 256, { allowGrid: true })).toEqual({
+      cols: 8, rows: 1, frameW: 256, frameH: 256
+    })
+  })
+
+  it('returns rows=1 for a tall sheet by default (no allowGrid)', () => {
+    expect(detectGrid(256, 1024)).toEqual({
+      cols: 1, rows: 1, frameW: 256, frameH: 1024
+    })
+  })
+})
