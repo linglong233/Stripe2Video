@@ -34,3 +34,22 @@ export interface EncodeRequest {
 
 /** A single frame as a PNG-encoded buffer. */
 export type PngFrame = Uint8Array
+
+/**
+ * The API surface exposed to the renderer via contextBridge (window.api).
+ * Defined in shared so both the preload (implementation) and the renderer
+ * (consumer) share one contract without the renderer depending on Electron.
+ */
+export interface Stripe2VideoApi {
+  /** Show a save dialog and return the chosen path (or null if cancelled). */
+  pickSavePath: () => Promise<string | null>
+  /**
+   * Encode frames to MP4. Resolves with the output path on success.
+   * onProgress receives a 0–100 percent value.
+   */
+  encodeVideo: (
+    frames: PngFrame[],
+    req: EncodeRequest,
+    onProgress?: (percent: number) => void
+  ) => Promise<string>
+}

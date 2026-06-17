@@ -10,5 +10,5 @@
     "resolveJsonModule": true,
     "types": ["node"]
   },
-  "include": ["src/main/**/*", "src/preload/**/*", "src/shared/**/*", "tests/**/*", "electron.vite.config.ts", "vitest.config.ts"]
+  "include": ["src/main/**/*", "src/preload/**/*", "src/shared/**/*", "src/renderer/src/lib/frameDetector.ts", "src/renderer/src/lib/frameOrder.ts", "tests/**/*", "electron.vite.config.ts", "vitest.config.ts"]
 }
