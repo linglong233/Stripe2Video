@@ -93,7 +93,7 @@ D:\Project\Stripe2Video\
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.27",
-    "@types/pngjs": "^7.0.0",
+    "@types/pngjs": "^6.0.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
