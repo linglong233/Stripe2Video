@@ -1,0 +1,15 @@
+appId: com.stripe2video.app
+productName: Stripe2Video
+directories:
+  output: dist
+files:
+  - out/**/*
+  - package.json
+# ffmpeg-static ships a platform binary resolved at runtime from node_modules,
+# so it must be packaged. electron-builder includes dependencies by default.
+asar: true
+win:
+  target: nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
