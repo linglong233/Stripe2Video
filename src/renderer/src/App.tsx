@@ -31,7 +31,7 @@ export default function App(): JSX.Element {
 
   const onImage = useCallback((bitmap: ImageBitmap, width: number, height: number, name: string) => {
     setImage({ bitmap, width, height, name })
-    setGrid(detectGrid(width, height))
+    setGrid(detectGrid(width, height, { allowGrid: true }))
   }, [])
 
   const ready = useMemo(() => image !== null && grid !== null && grid.cols * grid.rows >= 1, [image, grid])
@@ -53,7 +53,7 @@ export default function App(): JSX.Element {
             <Controls
               grid={grid}
               exportParams={exportParams}
-              showRows={false}
+              showRows={true}
               onGridChange={setGrid}
               onExportChange={setExportParams}
             />
