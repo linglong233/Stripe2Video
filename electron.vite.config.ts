@@ -13,6 +13,7 @@ export default defineConfig({
   },
   renderer: {
     root: 'src/renderer',
+    server: { host: '127.0.0.1' },
     build: { rollupOptions: { input: { index: resolve(__dirname, 'src/renderer/index.html') } } },
     plugins: [react()]
   }
