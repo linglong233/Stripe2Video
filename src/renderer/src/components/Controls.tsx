@@ -5,7 +5,8 @@ interface ControlsProps {
   grid: GridParams
   exportParams: ExportParams
   showRows: boolean
-  onGridChange: (g: GridParams) => void
+  onColsChange: (cols: number) => void
+  onRowsChange: (rows: number) => void
   onExportChange: (e: ExportParams) => void
 }
 
@@ -13,7 +14,7 @@ const labelStyle: CSSProperties = { display: 'block', fontSize: 13, marginTop: 1
 const rowStyle: CSSProperties = { display: 'flex', gap: 12, alignItems: 'center' }
 
 export function Controls({
-  grid, exportParams, showRows, onGridChange, onExportChange
+  grid, exportParams, showRows, onColsChange, onRowsChange, onExportChange
 }: ControlsProps): JSX.Element {
   const setExp = (patch: Partial<ExportParams>): void =>
     onExportChange({ ...exportParams, ...patch })
@@ -24,14 +25,14 @@ export function Controls({
       <label style={labelStyle}>列数</label>
       <input
         type="number" min={1} value={grid.cols}
-        onChange={(e) => onGridChange({ ...grid, cols: Math.max(1, Number(e.target.value)) })}
+        onChange={(e) => onColsChange(Math.max(1, Number(e.target.value)))}
       />
       {showRows && (
         <>
           <label style={labelStyle}>行数</label>
           <input
             type="number" min={1} value={grid.rows}
-            onChange={(e) => onGridChange({ ...grid, rows: Math.max(1, Number(e.target.value)) })}
+            onChange={(e) => onRowsChange(Math.max(1, Number(e.target.value)))}
           />
         </>
       )}

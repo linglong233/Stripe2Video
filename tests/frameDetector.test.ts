@@ -1,5 +1,15 @@
 import { describe, it, expect } from 'vitest'
-import { detectGrid, isEvenlyDivisible } from '../src/renderer/src/lib/frameDetector'
+import { detectGrid, isEvenlyDivisible, makeGrid } from '../src/renderer/src/lib/frameDetector'
+
+describe('makeGrid', () => {
+  it('divides width/height by cols/rows', () => {
+    expect(makeGrid(1100, 256, 55, 1)).toEqual({ cols: 55, rows: 1, frameW: 20, frameH: 256 })
+  })
+
+  it('floors the frame size when not evenly divisible', () => {
+    expect(makeGrid(1100, 256, 7, 1).frameW).toBe(157)
+  })
+})
 
 describe('detectGrid (horizontal strip)', () => {
   it('guesses 8 columns for a 2048x256 strip', () => {

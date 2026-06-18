@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { GridParams, ExportParams } from '../../shared/types'
-import { detectGrid } from './lib/frameDetector'
+import { detectGrid, makeGrid } from './lib/frameDetector'
 import { Dropzone } from './components/Dropzone'
 import { PreviewCanvas } from './components/PreviewCanvas'
 import { AnimationPreview } from './components/AnimationPreview'
@@ -34,6 +34,16 @@ export default function App(): JSX.Element {
     setGrid(detectGrid(width, height, { allowGrid: true }))
   }, [])
 
+  // cols/rows are user inputs; frameW/frameH are always re-derived from the
+  // real image dimensions so the grid never goes stale on manual edits.
+  const onColsChange = useCallback((cols: number) => {
+    setGrid((prev) => (prev && image ? makeGrid(image.width, image.height, cols, prev.rows) : prev))
+  }, [image])
+
+  const onRowsChange = useCallback((rows: number) => {
+    setGrid((prev) => (prev && image ? makeGrid(image.width, image.height, prev.cols, rows) : prev))
+  }, [image])
+
   const ready = useMemo(() => image !== null && grid !== null && grid.cols * grid.rows >= 1, [image, grid])
 
   return (
@@ -54,7 +64,8 @@ export default function App(): JSX.Element {
               grid={grid}
               exportParams={exportParams}
               showRows={true}
-              onGridChange={setGrid}
+              onColsChange={onColsChange}
+              onRowsChange={onRowsChange}
               onExportChange={setExportParams}
             />
             <ExportBar

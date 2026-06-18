@@ -5,24 +5,30 @@ export interface DetectOptions {
   allowGrid?: boolean
 }
 
+/** Build grid params by dividing image dimensions into cols × rows cells. */
+export function makeGrid(imageW: number, imageH: number, cols: number, rows: number): GridParams {
+  return {
+    cols,
+    rows,
+    frameW: Math.floor(imageW / cols),
+    frameH: Math.floor(imageH / rows)
+  }
+}
+
 /**
  * Propose a grid for a sprite sheet.
- * Heuristic: assume square-ish frames, so cols ≈ width / height (this is exact
- * for a single-row strip where each frame is height-tall). When `allowGrid` is
- * set, also guess rows ≈ height / frameWidth. Auto-detection is only a starting
- * point — grid rows are fundamentally ambiguous from dimensions alone, so the
- * UI lets the user fine-tune against the live preview.
+ * Heuristic: assume square-ish frames, so cols ≈ width / height (exact for a
+ * single-row strip). With allowGrid, also guess rows ≈ height / frameWidth.
+ * Detection is only a starting point — the user fine-tunes against the preview.
  */
 export function detectGrid(imageW: number, imageH: number, options: DetectOptions = {}): GridParams {
   const cols = Math.max(1, Math.round(imageW / imageH))
-  const frameW = Math.floor(imageW / cols)
-
   if (!options.allowGrid) {
-    return { cols, rows: 1, frameW, frameH: imageH }
+    return makeGrid(imageW, imageH, cols, 1)
   }
-
+  const frameW = Math.floor(imageW / cols)
   const rows = Math.max(1, Math.round(imageH / frameW))
-  return { cols, rows, frameW, frameH: Math.floor(imageH / rows) }
+  return makeGrid(imageW, imageH, cols, rows)
 }
 
 /** True when every column has the same integer pixel width. */
