@@ -21,7 +21,8 @@ const defaultExport: ExportParams = {
   loopCount: 3,
   durationSec: 1,
   scale: 1,
-  bgColor: '#000000'
+  bgColor: '#000000',
+  transparent: false
 }
 
 export default function App(): JSX.Element {

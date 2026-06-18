@@ -10,7 +10,9 @@ export interface RenderResult {
 /**
  * Render the ordered output frames as PNG buffers.
  * - Nearest-neighbor scaling (imageSmoothingEnabled = false) keeps pixels crisp.
- * - Transparent source pixels are composited over `bgColor` (MP4 has no alpha).
+ * - Opaque export: transparent source pixels composited over `bgColor` (MP4 has no alpha).
+ * - Transparent export: background is left clear so the sprite's original alpha is
+ *   preserved in the PNG, then encoded to VP9 + alpha as WebM.
  */
 export async function renderFrames(
   source: ImageBitmap,
@@ -31,8 +33,10 @@ export async function renderFrames(
     if (!ctx) throw new Error('Failed to get 2D context for OffscreenCanvas')
 
     ctx.imageSmoothingEnabled = false
-    ctx.fillStyle = exp.bgColor
-    ctx.fillRect(0, 0, tw, th)
+    if (!exp.transparent) {
+      ctx.fillStyle = exp.bgColor
+      ctx.fillRect(0, 0, tw, th)
+    }
     ctx.drawImage(
       source,
       col * grid.frameW, row * grid.frameH, grid.frameW, grid.frameH,

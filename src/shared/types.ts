@@ -22,14 +22,17 @@ export interface ExportParams {
   durationSec: number
   /** Integer upscaling factor. */
   scale: 1 | 2 | 4
-  /** Background color (hex) composited behind transparent pixels. */
+  /** Background color (hex) composited behind transparent pixels (ignored when transparent is true). */
   bgColor: string
+  /** When true, export a transparent WebM (VP9 + alpha) instead of an MP4. */
+  transparent: boolean
 }
 
 /** Payload sent from renderer to main for encoding. */
 export interface EncodeRequest {
   fps: number
   outPath: string
+  transparent: boolean
 }
 
 /** A single frame as a PNG-encoded buffer. */
@@ -41,8 +44,8 @@ export type PngFrame = Uint8Array
  * (consumer) share one contract without the renderer depending on Electron.
  */
 export interface Stripe2VideoApi {
-  /** Show a save dialog and return the chosen path (or null if cancelled). */
-  pickSavePath: () => Promise<string | null>
+  /** Show a save dialog for the given format and return the chosen path (or null if cancelled). */
+  pickSavePath: (format: 'mp4' | 'webm') => Promise<string | null>
   /**
    * Encode frames to MP4. Resolves with the output path on success.
    * onProgress receives a 0–100 percent value.

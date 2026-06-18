@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { existsSync, statSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
+import { spawnSync } from 'child_process'
 import { PNG } from 'pngjs'
 import { encodeVideo } from '../src/main/encoder'
+import { getFfmpegPath } from '../src/main/ffmpeg'
 
 function solidPng(w: number, h: number, rgb: [number, number, number]): Uint8Array {
   const png = new PNG({ width: w, height: h })
@@ -16,16 +18,40 @@ function solidPng(w: number, h: number, rgb: [number, number, number]): Uint8Arr
   return PNG.sync.write(png) as unknown as Uint8Array
 }
 
+/** PNG with a left half fully transparent, right half opaque red (exercises alpha). */
+function pngWithAlpha(w: number, h: number): Uint8Array {
+  const png = new PNG({ width: w, height: h })
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (w * y + x) << 2
+      png.data[i] = 255
+      png.data[i + 1] = 0
+      png.data[i + 2] = 0
+      png.data[i + 3] = x < w / 2 ? 0 : 255
+    }
+  }
+  return PNG.sync.write(png) as unknown as Uint8Array
+}
+
+/** Run `ffmpeg -i <out>` and return combined stdout+stderr (stream info is on stderr). */
+function probeVideo(outPath: string): string {
+  const r = spawnSync(getFfmpegPath(), ['-i', outPath], { encoding: 'utf8' })
+  return `${r.stderr ?? ''}${r.stdout ?? ''}`
+}
+
 describe('encodeVideo (integration)', () => {
-  it('produces a non-empty MP4 from PNG frames', async () => {
+  it('produces a non-empty MP4 (H.264 / yuv420p) from PNG frames', async () => {
     const frames = [solidPng(8, 8, [255, 0, 0]), solidPng(8, 8, [0, 255, 0])]
     const outPath = join(tmpdir(), `stripe2video-test-${Date.now()}.mp4`)
 
-    const result = await encodeVideo(frames, { fps: 2, outPath })
+    const result = await encodeVideo(frames, { fps: 2, outPath, transparent: false })
 
     expect(result).toBe(outPath)
     expect(existsSync(outPath)).toBe(true)
     expect(statSync(outPath).size).toBeGreaterThan(0)
+    const info = probeVideo(outPath)
+    expect(info).toContain('h264')
+    expect(info).toContain('yuv420p')
   }, 30000)
 
   it('reports progress between 0 and 100 on a longer clip', async () => {
@@ -34,9 +60,24 @@ describe('encodeVideo (integration)', () => {
     const outPath = join(tmpdir(), `stripe2video-prog-${Date.now()}.mp4`)
     const seen: number[] = []
 
-    await encodeVideo(frames, { fps: 10, outPath, onProgress: (p) => seen.push(p) })
+    await encodeVideo(frames, { fps: 10, outPath, transparent: false, onProgress: (p) => seen.push(p) })
 
     expect(seen.length).toBeGreaterThan(0)
     expect(Math.max(...seen)).toBeLessThanOrEqual(100)
   }, 30000)
+
+  it('produces a transparent WebM (VP9 + yuva420p) from alpha PNGs', async () => {
+    const frames = [pngWithAlpha(16, 16), pngWithAlpha(16, 16)]
+    const outPath = join(tmpdir(), `stripe2video-transparent-${Date.now()}.webm`)
+
+    const result = await encodeVideo(frames, { fps: 2, outPath, transparent: true })
+
+    expect(result).toBe(outPath)
+    expect(existsSync(outPath)).toBe(true)
+    expect(statSync(outPath).size).toBeGreaterThan(0)
+    const info = probeVideo(outPath)
+    expect(info).toContain('vp9')
+    // VP9 carries alpha as a separate "alpha_mode" flag (color plane reports yuv420p).
+    expect(info).toContain('alpha_mode')
+  }, 60000)
 })

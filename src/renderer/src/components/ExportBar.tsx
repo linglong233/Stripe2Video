@@ -9,10 +9,11 @@ interface ExportBarProps {
 }
 
 export function ExportBar({ source, grid, exportParams, disabled }: ExportBarProps): JSX.Element {
-  const label = '导出 MP4'
+  const format = exportParams.transparent ? 'webm' : 'mp4'
+  const label = `导出 ${format.toUpperCase()}`
 
   const handleExport = async (): Promise<void> => {
-    const outPath = await window.api.pickSavePath()
+    const outPath = await window.api.pickSavePath(format)
     if (!outPath) return
 
     const button = document.getElementById('export-btn') as HTMLButtonElement | null
@@ -25,17 +26,17 @@ export function ExportBar({ source, grid, exportParams, disabled }: ExportBarPro
       setProg(0)
       const { frames } = await renderFrames(source, grid, exportParams)
 
-      setText('编码中…')
+      setText(exportParams.transparent ? '编码中…（VP9 较慢）' : '编码中…')
       await window.api.encodeVideo(
         frames,
-        { fps: exportParams.fps, outPath },
+        { fps: exportParams.fps, outPath, transparent: exportParams.transparent },
         (p) => setProg(Math.min(100, Math.max(0, p)))
       )
-      setText('导出 MP4')
+      setText(label)
       setProg(100)
       alert(`导出成功：${outPath}`)
     } catch (err) {
-      setText('导出 MP4')
+      setText(label)
       setProg(0)
       alert(`导出失败：${err instanceof Error ? err.message : String(err)}`)
     }

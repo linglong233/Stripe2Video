@@ -86,12 +86,25 @@ export function Controls({
         <option value={4}>4×</option>
       </select>
 
-      <label style={labelStyle}>背景色</label>
-      <input
-        type="color"
-        value={exportParams.bgColor}
-        onChange={(e) => setExp({ bgColor: e.target.value })}
-      />
+      <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <input
+          type="checkbox"
+          checked={exportParams.transparent}
+          onChange={(e) => setExp({ transparent: e.target.checked })}
+        />
+        透明背景（WebM）
+      </label>
+
+      {!exportParams.transparent && (
+        <>
+          <label style={labelStyle}>背景色</label>
+          <input
+            type="color"
+            value={exportParams.bgColor}
+            onChange={(e) => setExp({ bgColor: e.target.value })}
+          />
+        </>
+      )}
     </div>
   )
 }

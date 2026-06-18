@@ -14,7 +14,8 @@ describe('shared types', () => {
       loopCount: 3,
       durationSec: 0,
       scale: 1,
-      bgColor: '#000000'
+      bgColor: '#000000',
+      transparent: false
     }
     const m: PlayMode = e.playMode
     expect(m).toBe('loop')

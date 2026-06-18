@@ -8,6 +8,8 @@ ffmpeg.setFfmpegPath(getFfmpegPath())
 export interface EncodeOptions {
   fps: number
   outPath: string
+  /** When true, encode a transparent WebM (VP9 + yuva420p); otherwise an MP4 (H.264 / yuv420p). */
+  transparent: boolean
   onProgress?: (percent: number) => void
 }
 
@@ -26,10 +28,18 @@ function parseTimemark(t?: string): number {
   return parts[0] ?? 0
 }
 
+/** Output options for each mode. Transparent keeps PNG alpha via VP9 + yuva420p. */
+function outputOptions(transparent: boolean): string[] {
+  return transparent
+    ? ['-c:v libvpx-vp9', '-pix_fmt yuva420p', '-b:v 0', '-crf 30', '-auto-alt-ref 0']
+    : ['-c:v libx264', '-pix_fmt yuv420p']
+}
+
 /**
- * Encode an ordered list of PNG buffers into an MP4 (H.264 / yuv420p).
+ * Encode an ordered list of PNG buffers into a video.
+ * - transparent=false → MP4 (H.264 / yuv420p), transparent pixels composited over bg upstream.
+ * - transparent=true  → WebM (VP9 / yuva420p), PNG alpha preserved.
  * Frames are written to a temp dir as frame_0001.png ... and fed to ffmpeg.
- * The temp dir is always cleaned up.
  *
  * Progress note: fluent-ffmpeg reports `percent: NaN` for image-sequence inputs
  * (no known source duration), so we derive percent from the timemark instead.
@@ -47,7 +57,7 @@ export function encodeVideo(frames: Uint8Array[], opts: EncodeOptions): Promise<
         const cmd = ffmpeg()
           .input(join(tempDir, 'frame_%04d.png'))
           .inputOptions(['-start_number 1', `-framerate ${opts.fps}`])
-          .outputOptions(['-c:v libx264', '-pix_fmt yuv420p'])
+          .outputOptions(outputOptions(opts.transparent))
           .on('progress', (p: FfmpegProgress) => {
             let percent = p.percent
             if (typeof percent !== 'number' || !Number.isFinite(percent)) {

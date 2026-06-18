@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import type { Stripe2VideoApi } from '../shared/types'
 
 const api: Stripe2VideoApi = {
-  pickSavePath: (): Promise<string | null> => ipcRenderer.invoke('dialog:save'),
+  pickSavePath: (format) => ipcRenderer.invoke('dialog:save', format),
 
   encodeVideo: (frames, req, onProgress) => {
     const listener = (_e: unknown, percent: number): void => onProgress?.(percent)
