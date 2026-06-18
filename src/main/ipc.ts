@@ -1,5 +1,6 @@
 import { ipcMain, dialog, BrowserWindow } from 'electron'
 import { encodeVideo } from './encoder'
+import { writeFrames } from './tempfs'
 import type { EncodeRequest } from '../shared/types'
 
 export function registerIpcHandlers(): void {
@@ -15,6 +16,19 @@ export function registerIpcHandlers(): void {
       ? await dialog.showSaveDialog(win, opts)
       : await dialog.showSaveDialog(opts)
     return result.canceled ? null : result.filePath
+  })
+
+  ipcMain.handle('dialog:pickDir', async () => {
+    const win = BrowserWindow.getFocusedWindow()
+    const result = win
+      ? await dialog.showOpenDialog(win, { properties: ['openDirectory'] })
+      : await dialog.showOpenDialog({ properties: ['openDirectory'] })
+    return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0]
+  })
+
+  ipcMain.handle('export:pngSequence', async (_event, frames: Uint8Array[], dir: string) => {
+    await writeFrames(dir, frames)
+    return dir
   })
 
   ipcMain.handle('encode:video', async (event, frames: Uint8Array[], req: EncodeRequest) => {

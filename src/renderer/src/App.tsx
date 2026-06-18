@@ -22,7 +22,7 @@ const defaultExport: ExportParams = {
   durationSec: 1,
   scale: 1,
   bgColor: '#000000',
-  transparent: false
+  format: 'mp4'
 }
 
 export default function App(): JSX.Element {

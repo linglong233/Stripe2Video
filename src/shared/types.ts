@@ -1,7 +1,7 @@
 export interface GridParams {
   /** Number of columns in the sprite sheet. */
   cols: number
-  /** Number of rows. Phase A locks this to 1; Phase B unlocks it. */
+  /** Number of rows. */
   rows: number
   /** Width of a single frame in source pixels. */
   frameW: number
@@ -10,6 +10,8 @@ export interface GridParams {
 }
 
 export type PlayMode = 'once' | 'loop' | 'duration'
+
+export type ExportFormat = 'mp4' | 'webm' | 'png'
 
 export interface ExportParams {
   /** Frames per second of the output video. 1–30. */
@@ -22,13 +24,13 @@ export interface ExportParams {
   durationSec: number
   /** Integer upscaling factor. */
   scale: 1 | 2 | 4
-  /** Background color (hex) composited behind transparent pixels (ignored when transparent is true). */
+  /** Background color (hex) composited behind transparent pixels (MP4 only). */
   bgColor: string
-  /** When true, export a transparent WebM (VP9 + alpha) instead of an MP4. */
-  transparent: boolean
+  /** Output format. webm and png preserve transparency; mp4 composites bgColor. */
+  format: ExportFormat
 }
 
-/** Payload sent from renderer to main for encoding. */
+/** Payload sent from renderer to main for video encoding (mp4/webm). */
 export interface EncodeRequest {
   fps: number
   outPath: string
@@ -44,12 +46,13 @@ export type PngFrame = Uint8Array
  * (consumer) share one contract without the renderer depending on Electron.
  */
 export interface Stripe2VideoApi {
-  /** Show a save dialog for the given format and return the chosen path (or null if cancelled). */
+  /** Show a file save dialog for the given video format and return the path (or null). */
   pickSavePath: (format: 'mp4' | 'webm') => Promise<string | null>
-  /**
-   * Encode frames to MP4. Resolves with the output path on success.
-   * onProgress receives a 0–100 percent value.
-   */
+  /** Show a directory picker and return the chosen folder (or null). Used for PNG sequence. */
+  pickDirectory: () => Promise<string | null>
+  /** Write an ordered list of PNG frames as frame_0001.png ... into the given directory. */
+  exportPngSequence: (frames: PngFrame[], dir: string) => Promise<string>
+  /** Encode frames to MP4 or WebM. Resolves with the output path on success. */
   encodeVideo: (
     frames: PngFrame[],
     req: EncodeRequest,

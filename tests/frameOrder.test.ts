@@ -4,7 +4,7 @@ import type { GridParams, ExportParams } from '../src/shared/types'
 
 const grid8: GridParams = { cols: 8, rows: 1, frameW: 256, frameH: 256 }
 const base = (over: Partial<ExportParams>): ExportParams => ({
-  fps: 12, playMode: 'once', loopCount: 3, durationSec: 0, scale: 1, bgColor: '#000000', transparent: false, ...over
+  fps: 12, playMode: 'once', loopCount: 3, durationSec: 0, scale: 1, bgColor: '#000000', format: 'mp4', ...over
 })
 
 describe('computeFrameOrder', () => {

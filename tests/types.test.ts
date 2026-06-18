@@ -15,7 +15,7 @@ describe('shared types', () => {
       durationSec: 0,
       scale: 1,
       bgColor: '#000000',
-      transparent: false
+      format: 'mp4'
     }
     const m: PlayMode = e.playMode
     expect(m).toBe('loop')

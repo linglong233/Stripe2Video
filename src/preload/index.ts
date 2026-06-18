@@ -3,6 +3,9 @@ import type { Stripe2VideoApi } from '../shared/types'
 
 const api: Stripe2VideoApi = {
   pickSavePath: (format) => ipcRenderer.invoke('dialog:save', format),
+  pickDirectory: () => ipcRenderer.invoke('dialog:pickDir'),
+
+  exportPngSequence: (frames, dir) => ipcRenderer.invoke('export:pngSequence', frames, dir),
 
   encodeVideo: (frames, req, onProgress) => {
     const listener = (_e: unknown, percent: number): void => onProgress?.(percent)

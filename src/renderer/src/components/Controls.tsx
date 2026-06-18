@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { GridParams, ExportParams, PlayMode } from '../../../shared/types'
+import type { GridParams, ExportParams, PlayMode, ExportFormat } from '../../../shared/types'
 
 interface ControlsProps {
   grid: GridParams
@@ -86,16 +86,17 @@ export function Controls({
         <option value={4}>4×</option>
       </select>
 
-      <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 6 }}>
-        <input
-          type="checkbox"
-          checked={exportParams.transparent}
-          onChange={(e) => setExp({ transparent: e.target.checked })}
-        />
-        透明背景（WebM）
-      </label>
+      <label style={labelStyle}>导出格式</label>
+      <select
+        value={exportParams.format}
+        onChange={(e) => setExp({ format: e.target.value as ExportFormat })}
+      >
+        <option value="mp4">MP4（不透明）</option>
+        <option value="webm">WebM（透明视频）</option>
+        <option value="png">PNG 序列（透明）</option>
+      </select>
 
-      {!exportParams.transparent && (
+      {exportParams.format === 'mp4' && (
         <>
           <label style={labelStyle}>背景色</label>
           <input
