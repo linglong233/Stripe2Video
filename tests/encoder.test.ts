@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { existsSync, statSync } from 'fs'
+import { existsSync, statSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { spawnSync } from 'child_process'
@@ -39,6 +39,31 @@ function probeVideo(outPath: string): string {
   return `${r.stderr ?? ''}${r.stdout ?? ''}`
 }
 
+/**
+ * Decode one frame of a transparent WebM back to an RGBA PNG and return the
+ * average alpha of its left half (source-transparent) vs right half (source-opaque).
+ *
+ * NOTE: ffmpeg's *native* VP9 decoder cannot read VP9 alpha — only the libvpx
+ * decoder can. So we force `-c:v libvpx-vp9` for decode. (Browsers use their own
+ * alpha-capable VP9 decoders, so a webm that decodes transparent here is also
+ * transparent in browsers.)
+ */
+function decodedAlphaRegions(outPath: string): { left: number; right: number } {
+  const dec = join(tmpdir(), `s2v-dec-${Date.now()}.png`)
+  spawnSync(getFfmpegPath(), ['-y', '-c:v', 'libvpx-vp9', '-i', outPath, '-vframes', '1', '-pix_fmt', 'rgba', dec])
+  const img = PNG.sync.read(readFileSync(dec))
+  const w = img.width
+  const h = img.height
+  let l = 0, r = 0, lc = 0, rc = 0
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (w * y + x) << 2
+      if (x < w / 2) { l += img.data[i + 3]; lc++ } else { r += img.data[i + 3]; rc++ }
+    }
+  }
+  return { left: l / lc, right: r / rc }
+}
+
 describe('encodeVideo (integration)', () => {
   it('produces a non-empty MP4 (H.264 / yuv420p) from PNG frames', async () => {
     const frames = [solidPng(8, 8, [255, 0, 0]), solidPng(8, 8, [0, 255, 0])]
@@ -66,7 +91,7 @@ describe('encodeVideo (integration)', () => {
     expect(Math.max(...seen)).toBeLessThanOrEqual(100)
   }, 30000)
 
-  it('produces a transparent WebM (VP9 + yuva420p) from alpha PNGs', async () => {
+  it('produces a transparent WebM whose alpha survives an encode+decode round-trip', async () => {
     const frames = [pngWithAlpha(16, 16), pngWithAlpha(16, 16)]
     const outPath = join(tmpdir(), `stripe2video-transparent-${Date.now()}.webm`)
 
@@ -75,9 +100,12 @@ describe('encodeVideo (integration)', () => {
     expect(result).toBe(outPath)
     expect(existsSync(outPath)).toBe(true)
     expect(statSync(outPath).size).toBeGreaterThan(0)
-    const info = probeVideo(outPath)
-    expect(info).toContain('vp9')
-    // VP9 carries alpha as a separate "alpha_mode" flag (color plane reports yuv420p).
-    expect(info).toContain('alpha_mode')
+    expect(probeVideo(outPath)).toContain('vp9')
+
+    // Gold-standard transparency check: decode back with libvpx and verify the
+    // source-transparent region is still transparent and the opaque region opaque.
+    const regions = decodedAlphaRegions(outPath)
+    expect(regions.left).toBeLessThan(10) // left half was transparent
+    expect(regions.right).toBeGreaterThan(245) // right half was opaque
   }, 60000)
 })
